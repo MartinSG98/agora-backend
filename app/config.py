@@ -30,7 +30,8 @@ MODEL_REGISTRY: dict[str, str] = {
     "nova-lite": "us.amazon.nova-lite-v1:0",
     "nova-pro": "us.amazon.nova-pro-v1:0",
     # one-click EULA acceptance in the Bedrock console
-    "llama-8b": "us.meta.llama3-1-8b-instruct-v1:0",
+    "llama-scout": "us.meta.llama4-scout-17b-instruct-v1:0",
+    "llama-maverick": "us.meta.llama4-maverick-17b-instruct-v1:0",
     "llama-70b": "us.meta.llama3-3-70b-instruct-v1:0",
     # requires the Bedrock use-case access request to be approved
     "claude-haiku": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
@@ -39,13 +40,15 @@ MODEL_REGISTRY: dict[str, str] = {
 }
 
 # role -> friendly model name; overridable per debate via the API.
-# Defaults use only no-form models, and put two different vendors head to
-# head — the cross-vendor comparison is the point (ADR 0004).
+# Defaults use only no-form models, put two different vendors head to head
+# (ADR 0004), and spend by role: cheapest where the job is mechanical
+# (fact-checker), mid-tier for the debaters, the strongest cheap model for
+# the judge — evaluation quality is the product. ~ $0.02 per live debate.
 DEFAULT_MODELS: dict[str, str] = {
     "debater_pro": "nova-lite",
-    "debater_con": "llama-8b",
+    "debater_con": "llama-scout",
     "judge": "nova-pro",
-    "fact_checker": "nova-lite",
+    "fact_checker": "nova-micro",
 }
 
 DEFAULT_FORMAT = "oxford"
