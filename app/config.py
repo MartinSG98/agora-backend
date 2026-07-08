@@ -21,18 +21,18 @@ class HardLimits:
     judge_retries: int = 1                # re-ask once on schema-invalid judge output
 
 
-# Friendly name -> Bedrock model id for the Converse API.
-# Cross-region inference profiles ("us." prefix); cheap models by default.
-# Adjust to what your account has enabled: `aws bedrock list-inference-profiles`.
+# Friendly name -> Bedrock model id for the Converse API (us-east-1).
+# Every non-Claude entry verified ENABLED on the project account via a live
+# converse probe (2026-07). Llama is unavailable: Meta geo-blocks Bedrock
+# access from the EU. Re-check with `aws bedrock list-inference-profiles`.
 MODEL_REGISTRY: dict[str, str] = {
-    # instantly accessible (no access-request form)
     "nova-micro": "us.amazon.nova-micro-v1:0",
     "nova-lite": "us.amazon.nova-lite-v1:0",
+    "nova-2-lite": "us.amazon.nova-2-lite-v1:0",
     "nova-pro": "us.amazon.nova-pro-v1:0",
-    # one-click EULA acceptance in the Bedrock console
-    "llama-scout": "us.meta.llama4-scout-17b-instruct-v1:0",
-    "llama-maverick": "us.meta.llama4-maverick-17b-instruct-v1:0",
-    "llama-70b": "us.meta.llama3-3-70b-instruct-v1:0",
+    "mistral-small": "mistral.mistral-small-2402-v1:0",
+    "mistral-large": "mistral.mistral-large-2402-v1:0",
+    "deepseek-r1": "us.deepseek.r1-v1:0",  # reasoning model; no tool use
     # requires the Bedrock use-case access request to be approved
     "claude-haiku": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
     "claude-sonnet": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -40,13 +40,13 @@ MODEL_REGISTRY: dict[str, str] = {
 }
 
 # role -> friendly model name; overridable per debate via the API.
-# Defaults use only no-form models, put two different vendors head to head
-# (ADR 0004), and spend by role: cheapest where the job is mechanical
-# (fact-checker), mid-tier for the debaters, the strongest cheap model for
-# the judge — evaluation quality is the product. ~ $0.02 per live debate.
+# Defaults put two vendors head to head (ADR 0004) and spend by role:
+# cheapest where the job is mechanical (fact-checker), mid-tier debaters,
+# the strongest cheap model as judge — evaluation quality is the product.
+# Roughly $0.02 per live debate.
 DEFAULT_MODELS: dict[str, str] = {
     "debater_pro": "nova-lite",
-    "debater_con": "llama-scout",
+    "debater_con": "mistral-small",
     "judge": "nova-pro",
     "fact_checker": "nova-micro",
 }
