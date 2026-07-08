@@ -60,7 +60,7 @@ PHASE_INSTRUCTIONS = {
 class Debater:
     def __init__(self, agent: ToolUseAgent, model_id: str, side: str):
         self._agent = agent
-        self._model_id = model_id
+        self.model_id = model_id
         self.side = side
 
     def _system_prompt(self, topic: str, format_rules: list[str]) -> str:
@@ -107,7 +107,7 @@ class Debater:
         # Code-enforced format rule: no new evidence in closing statements.
         use_tools = phase != "closing"
         return await self._agent.run(
-            model_id=self._model_id,
+            model_id=self.model_id,
             system=self._system_prompt(topic, format_rules),
             user_prompt=self._user_prompt(phase, turns, notes, remaining_evidence),
             use_tools=use_tools,

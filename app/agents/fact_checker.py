@@ -46,14 +46,14 @@ class FactChecker:
         self._provider = provider
         self._mcp = mcp
         self._limits = limits
-        self._model_id = model_id
+        self.model_id = model_id
 
     async def check(self, transcript: str) -> FactCheckOutcome:
         outcome = FactCheckOutcome()
         started = time.perf_counter()
 
         response = await self._provider.generate(
-            model_id=self._model_id,
+            model_id=self.model_id,
             system=_SYSTEM,
             messages=[{
                 "role": "user",

@@ -70,7 +70,7 @@ class Judge:
         self._provider = provider
         self._mcp = mcp
         self._limits = limits
-        self._model_id = model_id
+        self.model_id = model_id
 
     async def _system_prompt(self) -> tuple[str, set[str]]:
         rubric = json.loads(
@@ -143,7 +143,7 @@ class Judge:
         attempts_allowed = 1 + self._limits.judge_retries
         for attempt in range(1, attempts_allowed + 1):
             response = await self._provider.generate(
-                model_id=self._model_id,
+                model_id=self.model_id,
                 system=system,
                 messages=messages,
                 tools=None,
