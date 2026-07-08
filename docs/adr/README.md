@@ -14,3 +14,4 @@ Significant design decisions for Agora, one file each. See
 | [0007](0007-debater-memory-research-notebook.md) | Debater memory — private research notebooks, no vector store |
 | [0008](0008-blind-judging-and-position-swap.md) | Blind judging and position-swap evaluation |
 | [0009](0009-local-first-sqlite-sse-replay-mock-default.md) | Local-first: SQLite, SSE with replay, mock mode default |
+| [0010](0010-mock-provider-as-first-class-implementation.md) | Mock provider as a first-class LLM implementation |
