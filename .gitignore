@@ -19,3 +19,5 @@ PLAN.md
 Thumbs.db
 .vscode/
 .idea/
+*.db-shm
+*.db-wal
