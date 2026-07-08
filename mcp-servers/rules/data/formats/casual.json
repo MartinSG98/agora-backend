@@ -1,0 +1,11 @@
+{
+  "name": "casual",
+  "display_name": "Casual debate",
+  "description": "Lightweight structure: opening statements, one rebuttal round, closing statements. Conversational tone allowed.",
+  "rebuttal_rounds": 1,
+  "rules": [
+    "Statements should stay on topic.",
+    "Rebuttals should engage with the opponent's strongest point.",
+    "Citing sources is encouraged; a relaxed tone is acceptable."
+  ]
+}

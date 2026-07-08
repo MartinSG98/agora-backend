@@ -1,0 +1,13 @@
+{
+  "name": "oxford",
+  "display_name": "Oxford-style debate",
+  "description": "Formal structure: opening statements, two rebuttal rounds, closing statements. No new evidence may be introduced in closing statements.",
+  "rebuttal_rounds": 2,
+  "rules": [
+    "Each statement must address the motion directly.",
+    "Rebuttals must respond to at least one specific point made by the opponent.",
+    "No new evidence may be introduced during closing statements.",
+    "Every factual claim should cite a source_id from the evidence server, e.g. (source: 1001).",
+    "Personal attacks and appeals to emotion in place of argument are penalised."
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "fallacies": [
+    {"name": "ad_hominem", "description": "Attacking the opponent rather than their argument."},
+    {"name": "straw_man", "description": "Misrepresenting the opponent's position to make it easier to attack."},
+    {"name": "appeal_to_emotion", "description": "Substituting emotional pressure for evidence or reasoning."},
+    {"name": "false_dilemma", "description": "Presenting only two options when more exist."},
+    {"name": "hasty_generalization", "description": "Drawing a broad conclusion from an unrepresentative sample."},
+    {"name": "appeal_to_authority", "description": "Treating an authority's opinion as proof without supporting evidence."},
+    {"name": "slippery_slope", "description": "Claiming one step inevitably leads to an extreme outcome without justification."},
+    {"name": "circular_reasoning", "description": "Using the conclusion as a premise of the argument."},
+    {"name": "red_herring", "description": "Introducing an irrelevant point to divert attention from the motion."},
+    {"name": "unsupported_claim", "description": "Asserting a factual claim without citing any source."}
+  ]
+}

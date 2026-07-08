@@ -1,0 +1,30 @@
+{
+  "name": "default",
+  "scale": {"min": 0, "max": 10},
+  "categories": {
+    "argument_quality": {
+      "weight": 0.25,
+      "description": "Clarity, depth and persuasiveness of the arguments presented."
+    },
+    "evidence_quality": {
+      "weight": 0.2,
+      "description": "Relevance and accuracy of cited evidence; penalise uncited or unsupported factual claims."
+    },
+    "rebuttal_effectiveness": {
+      "weight": 0.2,
+      "description": "How directly and convincingly the participant addressed the opponent's specific points."
+    },
+    "logical_consistency": {
+      "weight": 0.15,
+      "description": "Absence of contradictions and logical fallacies across all statements."
+    },
+    "topic_relevance": {
+      "weight": 0.1,
+      "description": "How closely the statements stay focused on the motion."
+    },
+    "rule_compliance": {
+      "weight": 0.1,
+      "description": "Adherence to the debate format rules, e.g. no new evidence introduced in closing statements."
+    }
+  }
+}
