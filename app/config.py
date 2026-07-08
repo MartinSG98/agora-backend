@@ -25,18 +25,26 @@ class HardLimits:
 # Cross-region inference profiles ("us." prefix); cheap models by default.
 # Adjust to what your account has enabled: `aws bedrock list-inference-profiles`.
 MODEL_REGISTRY: dict[str, str] = {
-    "claude-haiku": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-    "claude-sonnet": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    # instantly accessible (no access-request form)
+    "nova-micro": "us.amazon.nova-micro-v1:0",
     "nova-lite": "us.amazon.nova-lite-v1:0",
     "nova-pro": "us.amazon.nova-pro-v1:0",
+    # one-click EULA acceptance in the Bedrock console
+    "llama-8b": "us.meta.llama3-1-8b-instruct-v1:0",
+    "llama-70b": "us.meta.llama3-3-70b-instruct-v1:0",
+    # requires the Bedrock use-case access request to be approved
+    "claude-haiku": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "claude-sonnet": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "mock": "mock",  # deterministic provider, no AWS required
 }
 
-# role -> friendly model name; overridable per debate via the API
+# role -> friendly model name; overridable per debate via the API.
+# Defaults use only no-form models, and put two different vendors head to
+# head — the cross-vendor comparison is the point (ADR 0004).
 DEFAULT_MODELS: dict[str, str] = {
-    "debater_pro": "claude-haiku",
-    "debater_con": "nova-lite",
-    "judge": "claude-haiku",
+    "debater_pro": "nova-lite",
+    "debater_con": "llama-8b",
+    "judge": "nova-pro",
     "fact_checker": "nova-lite",
 }
 
