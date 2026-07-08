@@ -21,7 +21,12 @@ from mcp.server.fastmcp import FastMCP
 mcp = FastMCP("agora-evidence")
 
 WIKI_API = "https://en.wikipedia.org/w/api.php"
-HEADERS = {"User-Agent": "AgoraDebateArena/0.1 (personal portfolio project)"}
+# Wikimedia's API policy requires a User-Agent with contact info —
+# a generic UA gets 403 Forbidden.
+HEADERS = {
+    "User-Agent": "AgoraDebateArena/0.1"
+                  " (+https://github.com/MartinSG98/agora-backend)"
+}
 
 OFFLINE = os.environ.get("AGORA_EVIDENCE_OFFLINE", "0") == "1"
 

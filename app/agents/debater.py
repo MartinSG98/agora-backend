@@ -41,14 +41,22 @@ def format_transcript(turns: list[dict], own_side: str) -> str:
     return "\n\n".join(lines)
 
 
+# Small models under-trigger tools when merely invited to use them, so the
+# opening/rebuttal instructions are prescriptive about when to call which
+# tool. The quota still caps them in code regardless.
 PHASE_INSTRUCTIONS = {
     "opening": (
-        "Write your opening statement. Research the motion with the evidence"
-        " tools first, then present your strongest two or three arguments."
+        "Before writing anything, call search_sources with a query about the"
+        " motion, then call get_source_content on the most relevant result."
+        " Only then write your opening statement, presenting your strongest"
+        " two or three arguments, each backed by the sources you just read."
     ),
     "rebuttal": (
         "Write a rebuttal. Address at least one specific point your opponent"
-        " made — quote or paraphrase it — and refute it."
+        " made — quote or paraphrase it — and refute it. If your research"
+        " notes lack the fact you need, call search_sources or"
+        " get_source_content first; if you doubt a quote your opponent"
+        " attributed to a source, call verify_quote on it."
     ),
     "closing": (
         "Write your closing statement. Summarise why your case prevails,"
