@@ -51,6 +51,19 @@ DEFAULT_MODELS: dict[str, str] = {
     "fact_checker": "nova-micro",
 }
 
+# Cost guard: only these models may be requested per debate via the API.
+# Everything outside this set (mistral-large, claude-*, deepseek-r1, ...)
+# stays in the registry but is not requestable unless deliberately enabled
+# with AGORA_ALLOWED_MODELS (comma-separated friendly names, or "*").
+_DEFAULT_ALLOWED = "nova-micro,nova-lite,nova-2-lite,nova-pro,mistral-small,mock"
+
+
+def allowed_models() -> set[str]:
+    raw = os.environ.get("AGORA_ALLOWED_MODELS", _DEFAULT_ALLOWED)
+    if raw.strip() == "*":
+        return set(MODEL_REGISTRY)
+    return {name.strip() for name in raw.split(",") if name.strip()}
+
 DEFAULT_FORMAT = "oxford"
 
 

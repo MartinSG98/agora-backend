@@ -135,6 +135,14 @@ async def test_validation_rejects_bad_input(client):
     })
     assert bad_model.status_code == 422
 
+    # in the registry, but outside the cost allowlist
+    expensive_model = await client.post("/debates", json={
+        "topic": "A perfectly fine topic",
+        "models": {"judge": "mistral-large"},
+    })
+    assert expensive_model.status_code == 422
+    assert "allowlist" in expensive_model.json()["detail"]
+
     bad_format = await client.post("/debates", json={
         "topic": "A perfectly fine topic", "format": "rap-battle",
     })

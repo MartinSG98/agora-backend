@@ -17,7 +17,12 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from app.config import DEFAULT_FORMAT, DEFAULT_MODELS, MODEL_REGISTRY
+from app.config import (
+    DEFAULT_FORMAT,
+    DEFAULT_MODELS,
+    MODEL_REGISTRY,
+    allowed_models,
+)
 from app.mcp_client.manager import RULES
 from app.orchestrator.events import DebateEvent, EventType
 from app.orchestrator.state_machine import clamp_rebuttal_rounds
@@ -48,6 +53,15 @@ async def create_debate(body: CreateDebateRequest, request: Request):
     if unknown_models:
         raise HTTPException(422, f"unknown models: {sorted(unknown_models)};"
                                  f" available: {sorted(MODEL_REGISTRY)}")
+    allowed = allowed_models()
+    blocked = {name for name in models.values() if name not in allowed}
+    if blocked:
+        raise HTTPException(
+            422,
+            f"models not on the cost allowlist: {sorted(blocked)}; allowed:"
+            f" {sorted(allowed)}. Expand with AGORA_ALLOWED_MODELS if"
+            " intentional.",
+        )
 
     try:
         format_spec = json.loads(await state.mcp.read_resource(
@@ -156,7 +170,11 @@ async def stream_events(debate_id: str, request: Request,
 
 @router.get("/models")
 async def list_models():
-    return {"registry": MODEL_REGISTRY, "defaults": DEFAULT_MODELS}
+    return {
+        "registry": MODEL_REGISTRY,
+        "defaults": DEFAULT_MODELS,
+        "allowed": sorted(allowed_models()),
+    }
 
 
 @router.get("/formats")
