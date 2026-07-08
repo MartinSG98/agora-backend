@@ -139,6 +139,25 @@ async def test_debater_prompt_separates_notes_from_transcript(mcp):
     assert "AGAINST" in system and "be nice" in system
 
 
+# -- transcript cleanup -----------------------------------------------------------
+
+
+def test_clean_statement_strips_leaked_scratchpads():
+    from app.orchestrator.orchestrator import clean_statement
+
+    leaked = (
+        "<thinking>Let me plan my argument here.</thinking>\n\n"
+        "<argument>\nVideo games help (source: 59602196).\n</argument>"
+    )
+    assert clean_statement(leaked) == "Video games help (source: 59602196)."
+
+    unclosed = "Real statement first. <thinking>then it trails off"
+    assert clean_statement(unclosed) == "Real statement first."
+
+    clean = "A perfectly normal statement."
+    assert clean_statement(clean) == clean
+
+
 # -- judge ----------------------------------------------------------------------
 
 

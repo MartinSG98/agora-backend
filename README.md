@@ -98,6 +98,8 @@ AGORA_MOCK_MODE=0 uvicorn app.main:app
 2. **Mistral Small never called a tool**, even under prescriptive instructions, while Nova Lite researched on its own. "Does this model actually research when given tools" is itself a leaderboard dimension.
 3. **The judge (Nova Pro) returned identical per-side score vectors in both runs** — the kind of degenerate scoring the position-swap and order-bias experiments exist to quantify.
 4. Wikimedia 403s generic User-Agents; evidence calls silently failed until the UA carried contact info. The pipeline behaved correctly throughout: no evidence → evidence_quality 2–3/10 → reasoned draws.
+5. **Run 3 (post-fixes) demonstrated the full thesis.** Nova Lite researched Wikipedia, cited real sources, and visibly adapted when it hit the code-enforced evidence quota mid-rebuttal. Mistral Small — with an empty research notebook — **fabricated three academic-sounding citations with invented quotes**. The fact-checker flagged every one (`not_found`), and the blind judge scored evidence_quality 7 vs 4 and gave Nova the win at 0.7 confidence, citing "consistent use of evidence". The judge's earlier identical-score pattern disappeared once the sides genuinely differed.
+6. Nova leaks its `<thinking>` scratchpad into statements; transcripts are now cleaned deterministically (prompts are advisory, hygiene is not).
 
 ## API
 

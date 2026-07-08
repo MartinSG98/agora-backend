@@ -15,6 +15,7 @@ Responsibilities per phase:
 
 import asyncio
 import json
+import re
 from collections import defaultdict
 
 from app.agents.agent import ToolUseAgent
@@ -57,6 +58,25 @@ class EventBus:
     def publish(self, debate_id: str, event: DebateEvent | None) -> None:
         for queue in self._subscribers[debate_id]:
             queue.put_nowait(event)
+
+
+# Some models leak scratchpads or wrap statements in pseudo-XML despite the
+# style instructions. Prompts are advisory; transcript hygiene is not — the
+# cleanup is deterministic (same principle as ADR 0003).
+_THINKING_BLOCK = re.compile(r"<thinking>.*?</thinking>\s*",
+                             re.DOTALL | re.IGNORECASE)
+_UNCLOSED_THINKING = re.compile(r"<thinking>.*\Z", re.DOTALL | re.IGNORECASE)
+_WRAPPER_TAGS = re.compile(
+    r"</?(argument|closing|opening|rebuttal|statement|response|answer)>\s*",
+    re.IGNORECASE,
+)
+
+
+def clean_statement(text: str) -> str:
+    text = _THINKING_BLOCK.sub("", text)
+    text = _UNCLOSED_THINKING.sub("", text)
+    text = _WRAPPER_TAGS.sub("", text)
+    return text.strip()
 
 
 def _delta_chunks(text: str, words_per_chunk: int = 12):
@@ -212,17 +232,18 @@ class DebateOrchestrator:
         for note in _notes_from_research(result.research):
             self._db.add_research_note(debate_id, side, **note)
 
-        for chunk in _delta_chunks(result.text):
+        statement = clean_statement(result.text)
+        for chunk in _delta_chunks(statement):
             emit(EventType.MESSAGE_DELTA, {"side": side, "text": chunk})
         emit(EventType.TURN_COMPLETED, {
             "side": side, "phase": phase, "round": round_,
-            "content": result.text,
+            "content": statement,
         })
 
         turn = {"phase": phase, "round": round_, "side": side,
-                "content": result.text}
+                "content": statement}
         turns.append(turn)
-        self._db.add_turn(debate_id, phase, round_, side, result.text)
+        self._db.add_turn(debate_id, phase, round_, side, statement)
         self._db.add_agent_run(
             debate_id, agent=f"debater_{side}", phase=phase,
             model_id=debater.model_id,

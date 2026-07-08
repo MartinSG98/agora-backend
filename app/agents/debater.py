@@ -81,7 +81,13 @@ class Debater:
             " source ids that appear in your research notes or in evidence"
             " tool results. Never invent a source id — an uncited claim is"
             " better than a fabricated citation, and citations are verified."
-            " Be persuasive but rigorous. Keep statements under 400 words."
+            " Be persuasive but rigorous. Keep statements under 400 words.\n"
+            "Speak like a person at a podium, not like an AI writing an"
+            " essay: first person, plain punctuation (no em dashes, no"
+            " bullet lists, no headings), varied sentence length, and no"
+            " meta tags such as <thinking> or <argument> — your entire"
+            " output is the statement itself. Avoid stock filler like"
+            " 'Furthermore' or opening every closing with 'In conclusion'."
         )
 
     def _user_prompt(
