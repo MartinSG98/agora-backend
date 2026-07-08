@@ -7,7 +7,7 @@
     "Each statement must address the motion directly.",
     "Rebuttals must respond to at least one specific point made by the opponent.",
     "No new evidence may be introduced during closing statements.",
-    "Every factual claim should cite a source_id from the evidence server, e.g. (source: 1001).",
+    "Every factual claim should cite the source_id of a source actually consulted via the evidence server; fabricated citations are penalised harder than missing ones.",
     "Personal attacks and appeals to emotion in place of argument are penalised."
   ]
 }

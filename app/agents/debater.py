@@ -77,7 +77,10 @@ class Debater:
             f"You are a skilled debater arguing {SIDE_STANCE[self.side]} the"
             f" motion: \"{topic}\".\n"
             f"Debate rules:\n{rules}\n"
-            "Cite every factual claim with its source id, e.g. (source: 1001)."
+            "Cite factual claims in the form (source: SOURCE_ID), using ONLY"
+            " source ids that appear in your research notes or in evidence"
+            " tool results. Never invent a source id — an uncited claim is"
+            " better than a fabricated citation, and citations are verified."
             " Be persuasive but rigorous. Keep statements under 400 words."
         )
 
