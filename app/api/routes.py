@@ -23,6 +23,7 @@ from app.config import (
     MODEL_REGISTRY,
     allowed_models,
 )
+from app.evaluation.position_swap import run_position_swap, swap_debaters
 from app.mcp_client.manager import RULES
 from app.orchestrator.events import DebateEvent, EventType
 from app.orchestrator.state_machine import clamp_rebuttal_rounds
@@ -39,10 +40,8 @@ class CreateDebateRequest(BaseModel):
     rebuttal_rounds: int | None = None
 
 
-@router.post("/debates")
-async def create_debate(body: CreateDebateRequest, request: Request):
-    state = request.app.state
-
+async def _prepare_debate(body: CreateDebateRequest, state) -> tuple[dict, dict, int]:
+    """Shared validation: returns (models, format_spec, rebuttal_rounds)."""
     unknown_roles = set(body.models) - set(DEFAULT_MODELS)
     if unknown_roles:
         raise HTTPException(422, f"unknown roles: {sorted(unknown_roles)};"
@@ -73,15 +72,23 @@ async def create_debate(body: CreateDebateRequest, request: Request):
     requested_rounds = (body.rebuttal_rounds if body.rebuttal_rounds is not None
                         else format_spec["rebuttal_rounds"])
     rounds = clamp_rebuttal_rounds(requested_rounds, state.settings.limits)
+    return models, format_spec, rounds
 
-    debate = state.db.create_debate(body.topic, body.format, models, rounds)
 
-    task = asyncio.create_task(
-        state.orchestrator.run_debate(debate, format_spec["rules"]),
-        name=f"debate-{debate['id']}",
-    )
+def _launch(state, coroutine, name: str) -> None:
+    task = asyncio.create_task(coroutine, name=name)
     state.debate_tasks.add(task)
     task.add_done_callback(state.debate_tasks.discard)
+
+
+@router.post("/debates")
+async def create_debate(body: CreateDebateRequest, request: Request):
+    state = request.app.state
+    models, format_spec, rounds = await _prepare_debate(body, state)
+
+    debate = state.db.create_debate(body.topic, body.format, models, rounds)
+    _launch(state, state.orchestrator.run_debate(debate, format_spec["rules"]),
+            f"debate-{debate['id']}")
     return debate
 
 
@@ -166,6 +173,46 @@ async def stream_events(debate_id: str, request: Request,
 
     generator = replay_stream() if (replay or finished) else live_stream()
     return StreamingResponse(generator, media_type="text/event-stream")
+
+
+@router.post("/evaluations/position-swap")
+async def create_position_swap(body: CreateDebateRequest, request: Request):
+    """Run the same topic twice with debater models exchanging sides —
+    does the win follow the model or the position? (ADR 0008)"""
+    state = request.app.state
+    models, format_spec, rounds = await _prepare_debate(body, state)
+
+    debate_a = state.db.create_debate(body.topic, body.format, models, rounds)
+    debate_b = state.db.create_debate(
+        body.topic, body.format, swap_debaters(models), rounds
+    )
+    evaluation = state.db.create_evaluation(
+        "position_swap", body.topic, [debate_a["id"], debate_b["id"]]
+    )
+    _launch(
+        state,
+        run_position_swap(state.db, state.orchestrator, evaluation["id"],
+                          [debate_a, debate_b], format_spec["rules"]),
+        f"evaluation-{evaluation['id']}",
+    )
+    return evaluation
+
+
+@router.get("/evaluations")
+async def list_evaluations(request: Request):
+    return {"evaluations": request.app.state.db.list_evaluations()}
+
+
+@router.get("/evaluations/{evaluation_id}")
+async def get_evaluation(evaluation_id: str, request: Request):
+    db = request.app.state.db
+    evaluation = db.get_evaluation(evaluation_id)
+    if evaluation is None:
+        raise HTTPException(404, "evaluation not found")
+    return {
+        **evaluation,
+        "debates": [db.get_debate(d) for d in evaluation["debate_ids"]],
+    }
 
 
 @router.get("/models")

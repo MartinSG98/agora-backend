@@ -287,6 +287,15 @@ class Database:
                 (json.dumps(result), evaluation_id),
             )
 
+    def list_evaluations(self, limit: int = 50) -> list[dict]:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT id, kind, topic, result_json IS NOT NULL AS done,"
+                " created_at FROM evaluations ORDER BY created_at DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [{**_row_to_dict(r), "done": bool(r["done"])} for r in rows]
+
     def get_evaluation(self, evaluation_id: str) -> dict | None:
         with self._lock:
             row = self._conn.execute(
