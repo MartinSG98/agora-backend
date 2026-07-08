@@ -11,6 +11,9 @@ venv/
 *.sqlite3
 .env
 
+# Local working notes (not part of the repo)
+PLAN.md
+
 # OS / editor
 .DS_Store
 Thumbs.db
