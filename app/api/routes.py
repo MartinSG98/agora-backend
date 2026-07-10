@@ -12,6 +12,7 @@ GET  /models, GET /formats         configuration surface for the frontend
 
 import asyncio
 import json
+from dataclasses import asdict
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -222,6 +223,23 @@ async def list_models():
         "defaults": DEFAULT_MODELS,
         "allowed": sorted(allowed_models()),
     }
+
+
+@router.get("/config")
+async def get_config(request: Request):
+    """Runtime configuration the UI should not hardcode: whether this
+    instance spends money, and the hard limits enforced in code."""
+    settings = request.app.state.settings
+    return {"mock_mode": settings.mock_mode, "limits": asdict(settings.limits)}
+
+
+@router.get("/rubric")
+async def get_rubric(request: Request):
+    """The scoring rubric, read from the rules MCP server — the same
+    resource the judge reads, so the UI can never drift from it."""
+    return json.loads(await request.app.state.mcp.read_resource(
+        RULES, "debate://rubrics/default"
+    ))
 
 
 @router.get("/formats")

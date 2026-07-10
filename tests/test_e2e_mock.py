@@ -158,3 +158,15 @@ async def test_config_surface(client):
 
     formats = (await client.get("/formats")).json()["formats"]
     assert {f["name"] for f in formats} == {"casual", "oxford"}
+
+    config = (await client.get("/config")).json()
+    assert config["mock_mode"] is True
+    assert config["limits"]["max_rebuttal_rounds"] == 2
+    assert config["limits"]["max_response_tokens"] == 600
+    assert config["limits"]["max_evidence_requests_per_phase"] == 3
+    assert config["limits"]["judge_retries"] == 1
+
+    rubric = (await client.get("/rubric")).json()
+    assert "argument_quality" in rubric["categories"]
+    weights = sum(c["weight"] for c in rubric["categories"].values())
+    assert abs(weights - 1.0) < 1e-9
