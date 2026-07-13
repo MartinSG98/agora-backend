@@ -130,7 +130,19 @@ class DebateOrchestrator:
         self._limits = limits
         self._bus = bus
 
-    async def run_debate(self, debate: dict, format_rules: list[str]) -> None:
+    async def run_debate(
+        self,
+        debate: dict,
+        format_rules: list[str],
+        step: asyncio.Semaphore | None = None,
+    ) -> None:
+        """Run a debate to completion.
+
+        With ``step`` set (step mode), the orchestrator pauses before every
+        unit of work — each statement, the fact-check, the judging — emits
+        an awaiting_advance event, and proceeds only when the semaphore is
+        released via POST /debates/{id}/advance.
+        """
         debate_id = debate["id"]
         seq = 0
 
@@ -144,14 +156,22 @@ class DebateOrchestrator:
             self._bus.publish(debate_id, event)
 
         try:
-            await self._run(debate, format_rules, emit)
+            await self._run(debate, format_rules, emit, step)
         except Exception as exc:
             self._db.update_phase(debate_id, DebatePhase.FAILED.value)
             emit(EventType.DEBATE_FAILED, {"error": str(exc)})
         finally:
             self._bus.publish(debate_id, None)  # close live streams
 
-    async def _run(self, debate: dict, format_rules: list[str], emit) -> None:
+    @staticmethod
+    async def _gate(step: asyncio.Semaphore | None, emit, next_unit: str) -> None:
+        """In step mode, announce what comes next and wait for an advance."""
+        if step is not None:
+            emit(EventType.AWAITING_ADVANCE, {"next": next_unit})
+            await step.acquire()
+
+    async def _run(self, debate: dict, format_rules: list[str], emit,
+                   step: asyncio.Semaphore | None = None) -> None:
         debate_id = debate["id"]
         topic = debate["topic"]
         models = {**DEFAULT_MODELS, **debate["models"]}
@@ -189,15 +209,21 @@ class DebateOrchestrator:
 
             if progress.is_speaking_phase:
                 for side in SIDES:
+                    unit = f"{side} {progress.phase.value}"
+                    if progress.rebuttal_round > 0:
+                        unit += f" {progress.rebuttal_round}"
+                    await self._gate(step, emit, unit)
                     await self._speaking_turn(
                         debate_id, debaters[side], progress, topic,
                         format_rules, turns, emit,
                     )
             elif progress.phase == DebatePhase.VERIFICATION:
+                await self._gate(step, emit, "fact-check")
                 claim_verdicts = await self._verification(
                     debate_id, fact_checker, turns, emit
                 )
             elif progress.phase == DebatePhase.JUDGING:
+                await self._gate(step, emit, "blind judging")
                 await self._judging(
                     debate_id, judge, topic, turns, claim_verdicts, emit
                 )

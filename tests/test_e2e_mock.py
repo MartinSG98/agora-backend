@@ -125,6 +125,60 @@ async def test_sse_replay_reproduces_the_debate(client):
     assert second == event_types
 
 
+async def test_step_mode_walks_the_debate_unit_by_unit(client):
+    created = await client.post("/debates", json={
+        "topic": "Museums should be free for everyone",
+        "rebuttal_rounds": 0,  # units: 2 opening + 2 closing + fact-check + judging
+        "step_mode": True,
+    })
+    assert created.status_code == 200
+    assert created.json()["step_mode"] is True
+    debate_id = created.json()["id"]
+
+    # nothing happens until the first advance
+    await asyncio.sleep(0.4)
+    detail = (await client.get(f"/debates/{debate_id}")).json()
+    assert detail["turns"] == []
+    assert detail["phase"] not in ("complete", "failed")
+
+    advances = 0
+    while advances < 20:
+        response = await client.post(f"/debates/{debate_id}/advance")
+        assert response.status_code == 200
+        advances += 1
+        await asyncio.sleep(0.4)  # let the released unit run
+        detail = (await client.get(f"/debates/{debate_id}")).json()
+        if detail["phase"] in ("complete", "failed"):
+            break
+
+    assert detail["phase"] == "complete"
+    assert advances == 6
+    assert len(detail["turns"]) == 4
+
+    # the stream recorded the pauses
+    events = []
+    async with client.stream(
+        "GET", f"/debates/{debate_id}/events", params={"replay": 1, "delay": 0}
+    ) as response:
+        async for line in response.aiter_lines():
+            if line.startswith("event: "):
+                events.append(line.removeprefix("event: "))
+    assert events.count("awaiting_advance") == 6
+
+    # finished debates no longer accept advances
+    assert (await client.post(f"/debates/{debate_id}/advance")).status_code == 409
+
+
+async def test_advance_rejects_non_step_debates(client):
+    created = await client.post("/debates", json={
+        "topic": "A perfectly normal automatic debate",
+    })
+    debate_id = created.json()["id"]
+    response = await client.post(f"/debates/{debate_id}/advance")
+    assert response.status_code == 409
+    await wait_for_completion(client, debate_id)
+
+
 async def test_validation_rejects_bad_input(client):
     too_short = await client.post("/debates", json={"topic": "nope"})
     assert too_short.status_code == 422

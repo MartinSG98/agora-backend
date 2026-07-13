@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 class EventType(str, Enum):
     DEBATE_STARTED = "debate_started"
+    AWAITING_ADVANCE = "awaiting_advance"
     PHASE_CHANGED = "phase_changed"
     TURN_STARTED = "turn_started"
     MESSAGE_DELTA = "message_delta"
