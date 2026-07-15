@@ -39,6 +39,8 @@ class CreateDebateRequest(BaseModel):
     format: str = DEFAULT_FORMAT
     models: dict[str, str] = Field(default_factory=dict)
     rebuttal_rounds: int | None = None
+    # pause before every unit of work; advance via POST /debates/{id}/advance
+    step_mode: bool = False
 
 
 async def _prepare_debate(body: CreateDebateRequest, state) -> tuple[dict, dict, int]:
@@ -88,9 +90,40 @@ async def create_debate(body: CreateDebateRequest, request: Request):
     models, format_spec, rounds = await _prepare_debate(body, state)
 
     debate = state.db.create_debate(body.topic, body.format, models, rounds)
-    _launch(state, state.orchestrator.run_debate(debate, format_spec["rules"]),
-            f"debate-{debate['id']}")
-    return debate
+    debate_id = debate["id"]
+
+    if body.step_mode:
+        gate = asyncio.Semaphore(0)
+        state.step_controllers[debate_id] = gate
+
+        async def run_stepped():
+            try:
+                await state.orchestrator.run_debate(
+                    debate, format_spec["rules"], step=gate
+                )
+            finally:
+                state.step_controllers.pop(debate_id, None)
+
+        _launch(state, run_stepped(), f"debate-{debate_id}")
+    else:
+        _launch(state, state.orchestrator.run_debate(debate, format_spec["rules"]),
+                f"debate-{debate_id}")
+    return {**debate, "step_mode": body.step_mode}
+
+
+@router.post("/debates/{debate_id}/advance")
+async def advance_debate(debate_id: str, request: Request):
+    """Release the next unit of a step-mode debate."""
+    state = request.app.state
+    gate = state.step_controllers.get(debate_id)
+    if gate is None:
+        if state.db.get_debate(debate_id) is None:
+            raise HTTPException(404, "debate not found")
+        raise HTTPException(
+            409, "debate is not awaiting an advance (not step mode, or finished)"
+        )
+    gate.release()
+    return {"advanced": True}
 
 
 @router.get("/debates")

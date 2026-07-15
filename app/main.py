@@ -36,6 +36,7 @@ async def lifespan(app: FastAPI):
         app.state.db, app.state.mcp, provider, settings.limits, app.state.bus
     )
     app.state.debate_tasks: set = set()
+    app.state.step_controllers: dict = {}  # debate_id -> advance semaphore
 
     yield
 
