@@ -1,5 +1,7 @@
 # Agora backend
 
+![CI](https://github.com/MartinSG98/agora-backend/actions/workflows/ci.yml/badge.svg)
+
 A multi-agent debate and evaluation platform. Two LLM agents argue a motion through a staged debate and research their evidence over MCP. A fact-checker verifies every citation against the actual sources, and a judge scores the transcript blind against a weighted rubric. Position-swap runs tell you whether a win came from the model or from the side it argued, which turns Agora into a reusable model-comparison environment rather than a chatbot demo.
 
 It runs entirely locally and costs nothing by default, using a deterministic mock provider and offline evidence fixtures. Flip one environment variable and the same pipeline runs real cross-vendor models on AWS Bedrock for about 2 cents per debate.
